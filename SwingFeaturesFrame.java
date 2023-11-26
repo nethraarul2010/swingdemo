@@ -52,6 +52,13 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
   private JLabel fileSaveDisplay;
   private JTextField numberTextField;
   private JCheckBox splitViewCheckBox;
+  private String srcPath;
+  private String destPath;
+  private int manipulationValue;
+  private int compressionValue;
+  private int levelAdjustValueB;
+  private int levelAdjustValueM;
+  private int levelAdjustValueW;
 
   private JTextField valueTextField;
 
@@ -123,9 +130,6 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
 
     splitViewCheckBox.setPreferredSize(new Dimension(100, 25)); // Adjust the size as needed
     splitViewCheckBox.setMaximumSize(new Dimension(100, 25)); // Adjust the size as needed
-
-
-
 
 
     //combo boxes
@@ -200,7 +204,16 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
           "Enter a value:");
       valueTextField.setVisible(true);
       valueTextField.setText(input);
-
+      manipulationValue = Integer.parseInt(input);
+      System.out.print(manipulationValue);
+    }
+   else if(selectedOption.equals("Levels-adjust")) {
+      levelAdjustValueB = Integer.parseInt(JOptionPane.showInputDialog(null,
+          "Enter a b value:"));
+      levelAdjustValueM = Integer.parseInt(JOptionPane.showInputDialog(null,
+          "Enter a m value:"));
+      levelAdjustValueW = Integer.parseInt(JOptionPane.showInputDialog(null,
+          "Enter a w value:"));
     }
     else {
       numberTextField.setVisible(false);
@@ -225,6 +238,8 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
         // User entered a valid number, show the text field
         numberTextField.setVisible(true);
         numberTextField.setText(input);
+        compressionValue = Integer.parseInt(input);
+        System.out.println(compressionValue);
       }
     } else {
       numberTextField.setVisible(false);
@@ -246,7 +261,9 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
           if (retvalue == JFileChooser.APPROVE_OPTION) {
             File f = fchooser.getSelectedFile();
             fileOpenDisplay.setText(f.getAbsolutePath());
+            srcPath = f.getAbsolutePath().toString();
           }
+          System.out.println("src"+srcPath);
         }
         break;
         case "Save file": {
@@ -255,6 +272,7 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
           if (retvalue == JFileChooser.APPROVE_OPTION) {
             File f = fchooser.getSelectedFile();
             fileSaveDisplay.setText(f.getAbsolutePath());
+            destPath = f.getAbsolutePath().toString();
           }
         }
         break;
