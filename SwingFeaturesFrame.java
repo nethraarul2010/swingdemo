@@ -8,6 +8,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 
+import java.util.Hashtable;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -26,6 +27,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -55,6 +57,11 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
   private String srcPath;
   private String destPath;
   private int manipulationValue;
+
+  private int splitValue;
+
+  private JButton okButton;
+  private JButton cancelButton;
   private int compressionValue;
   private int levelAdjustValueB;
   private int levelAdjustValueM;
@@ -79,35 +86,27 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
     JPanel imagePanel = new JPanel();
     //a border around the panel with a caption
     imagePanel.setBorder(BorderFactory.createTitledBorder("Showing an image"));
-    imagePanel.setLayout(new GridLayout(1, 0, 10, 10));
-    //imagePanel.setMaximumSize(null);
-    mainPanel.add(imagePanel);
+    imagePanel.setLayout(new FlowLayout());
+
 
     //Pass the buffered image to the constructor and add the link of buffered image here
-    String[] images = {"Jellyfish.jpg", "test-color-hist.jpg"};
-    JLabel[] imageLabel = new JLabel[images.length];
-    JScrollPane[] imageScrollPane = new JScrollPane[images.length];
+// Regular Image with ScrollPane
+    String srcImg = "Jellyfish.jpg";
+    JLabel srcImageLabel = new JLabel();
+    JScrollPane srcImgScroll = new JScrollPane(srcImageLabel);
+    ImageIcon srcImgIcon = new ImageIcon(srcImg);
+    srcImageLabel.setIcon(srcImgIcon);
+    srcImgScroll.setPreferredSize(new Dimension(1000, 600));
+    imagePanel.add(srcImgScroll);
 
-    for (int i = 0; i < imageLabel.length; i++) {
-      imageLabel[i] = new JLabel();
-      imageScrollPane[i] = new JScrollPane(imageLabel[i]);
+// Histogram Image
+    String histImg = "test-color-hist.jpg";
+    JLabel histImageLabel = new JLabel();
+    ImageIcon histImgIcon = new ImageIcon(histImg);
+    histImageLabel.setIcon(histImgIcon);
+    imagePanel.add(histImageLabel);
 
-      ImageIcon icon = new ImageIcon(images[i]);
-      int width = icon.getIconWidth();
-      int height = icon.getIconHeight();
-
-      if (width == 256 && height == 256) {
-        // Set a fixed size for the 256x256 image
-        imageScrollPane[i].setPreferredSize(new Dimension(256, 256));
-      } else {
-        // Set a preferred size for other images
-        imageScrollPane[i].setPreferredSize(new Dimension(500, 600));
-      }
-
-      imageLabel[i].setIcon(icon);
-      imagePanel.add(imageScrollPane[i]);
-    }
-
+    mainPanel.add(imagePanel);
 
 // Check box for split
     JPanel splitViewPanel = new JPanel();
@@ -118,7 +117,7 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
     numberTextField.addActionListener(this);
     splitViewPanel.add(numberTextField);
 
-    splitViewCheckBox = new JCheckBox("Split view");
+    splitViewCheckBox = new JCheckBox("Preview");
     splitViewCheckBox.setActionCommand("Split view");
     splitViewCheckBox.setSelected(false);
     splitViewCheckBox.addItemListener(this);
@@ -134,12 +133,12 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
 
     //combo boxes
     JPanel comboboxPanel = new JPanel();
- //   comboboxPanel.setBorder(BorderFactory.createTitledBorder("Combo boxes"));
+    //   comboboxPanel.setBorder(BorderFactory.createTitledBorder("Combo boxes"));
     comboboxPanel.setLayout(new BoxLayout(comboboxPanel, BoxLayout.PAGE_AXIS));
     mainPanel.add(comboboxPanel);
 
-    comboboxDisplay = new JLabel("Image manipulation operations");
-    comboboxPanel.add(comboboxDisplay);
+   // comboboxDisplay = new JLabel("Image manipulation operations");
+    //comboboxPanel.add(comboboxDisplay);
     String[] options = {"Red-component", "Green-Component", "Blue-Component", "Blur","Sharpen",
         "Sepia","Grey-scale","Color-correct","Compress","Levels-adjust","Brighten","Darken"};
 
@@ -193,11 +192,17 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
 
 
   }
-  // New method to handle the "Size options" action
   private void handleSizeOptionAction() {
     String selectedOption = (String) combobox.getSelectedItem();
-
+    splitViewCheckBox.setEnabled(false);
     // Show/hide text field based on the selected option
+    if (selectedOption.equals("Color-correct") || selectedOption.equals("Sepia")
+        || selectedOption.equals("Levels-adjust")
+        || selectedOption.equals("Luma")|| selectedOption.equals("Sharpen")
+        || selectedOption.equals("Brighten")|| selectedOption.equals("Blur")) {
+      // Enable splitViewCheckBox for specific operations
+      splitViewCheckBox.setEnabled(true);
+    }
     if (selectedOption.equals("Brighten") || selectedOption.equals("Darken")
         || selectedOption.equals("Compress")) {
       String input = JOptionPane.showInputDialog(null,
@@ -207,7 +212,7 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
       manipulationValue = Integer.parseInt(input);
       System.out.print(manipulationValue);
     }
-   else if(selectedOption.equals("Levels-adjust")) {
+    else if(selectedOption.equals("Levels-adjust")) {
       levelAdjustValueB = Integer.parseInt(JOptionPane.showInputDialog(null,
           "Enter a b value:"));
       levelAdjustValueM = Integer.parseInt(JOptionPane.showInputDialog(null,
@@ -220,71 +225,82 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
       numberTextField.setText(""); // Clear the text field when unchecked
     }
   }
-  // Modify handleSplitViewAction to accept the checkbox state as a parameter
+
   private void handleSplitViewAction(boolean currentState) {
     System.out.println("Came inside split view");
     boolean previousState = !currentState;
 
     if (currentState) {
-      // Display an input dialog to get the Split View number
-      String input = JOptionPane.showInputDialog(null,
-          "Enter Split View number:");
 
-      // Check if the user clicked "Cancel" or entered an empty value
-      if (input == null || input.trim().isEmpty()) {
-        splitViewCheckBox.setSelected(previousState); // Restore the checkbox state
-        numberTextField.setVisible(false);
-      } else {
-        // User entered a valid number, show the text field
-        numberTextField.setVisible(true);
-        numberTextField.setText(input);
-        compressionValue = Integer.parseInt(input);
-        System.out.println(compressionValue);
-      }
-    } else {
-      numberTextField.setVisible(false);
-      numberTextField.setText(""); // Clear the text field when unchecked
-    }
-  }
-  @Override
-  public void actionPerformed(ActionEvent arg0) {
-      switch (arg0.getActionCommand()) {
-        case "Size options":
-          handleSizeOptionAction();
-          break;
-        case "Open file": {
-          final JFileChooser fchooser = new JFileChooser(".");
-          FileNameExtensionFilter filter = new FileNameExtensionFilter(
-              "JPG & GIF Images", "jpg", "gif");
-          fchooser.setFileFilter(filter);
-          int retvalue = fchooser.showOpenDialog(SwingFeaturesFrame.this);
-          if (retvalue == JFileChooser.APPROVE_OPTION) {
-            File f = fchooser.getSelectedFile();
-            fileOpenDisplay.setText(f.getAbsolutePath());
-            srcPath = f.getAbsolutePath().toString();
-          }
-          System.out.println("src"+srcPath);
-        }
-        break;
-        case "Save file": {
-          final JFileChooser fchooser = new JFileChooser(".");
-          int retvalue = fchooser.showSaveDialog(SwingFeaturesFrame.this);
-          if (retvalue == JFileChooser.APPROVE_OPTION) {
-            File f = fchooser.getSelectedFile();
-            fileSaveDisplay.setText(f.getAbsolutePath());
-            destPath = f.getAbsolutePath().toString();
-          }
-        }
-        break;
-      }
-    }
+      JPanel panel = new JPanel(new GridLayout(3,1)); // 2 rows, 1 column
+      panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+      JScrollPane ScrollPane = new JScrollPane(mainPanel);
+      add(ScrollPane);
+      JLabel lbl = new JLabel(new ImageIcon("Penguins.jpg"));
+      JScrollPane lblScrollPane = new JScrollPane(lbl);
+      lblScrollPane.setPreferredSize(new Dimension(1000,600));
+      panel.add(lblScrollPane);
 
+      JLabel percentLabel = new JLabel("Split Percentage:");
+      panel.add(percentLabel);
+      JSlider splitPercent = new JSlider(0,100,50);
+      splitPercent.setMajorTickSpacing(10);
+      splitPercent.setMinorTickSpacing(1);
+      splitPercent.setPaintLabels(true);
+      Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
+      labelTable.put(0, new JLabel("0"));
+      labelTable.put(50, new JLabel("50"));
+      labelTable.put(100, new JLabel("100"));
+      splitPercent.setLabelTable(labelTable);
+      panel.add(splitPercent);
+
+      JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+      // Create buttons
+      JButton okButton = new JButton("OK");
+      okButton.setActionCommand("splitOk");
+      JButton cancelButton = new JButton("Cancel");
+      cancelButton.setActionCommand("splitCancel");
+
+
+      okButton.addActionListener(e -> {
+        JOptionPane.getRootFrame().dispose();
+         splitValue = splitPercent.getValue();
+          System.out.println(splitValue);
+      });
+
+      cancelButton.addActionListener(e -> {
+        JOptionPane.getRootFrame().dispose();
+      });
+
+      buttonPanel.add(okButton);
+      buttonPanel.add(cancelButton);
+
+      // Add the button panel to the main panel
+      panel.add(buttonPanel);
+
+      int result = JOptionPane.showOptionDialog(
+          null,
+          panel,
+          "ImageDialog with Buttons",
+          JOptionPane.OK_CANCEL_OPTION,
+          JOptionPane.PLAIN_MESSAGE,
+          null,
+          new Object[]{},
+          null);
 
 /*
+      if (result == JOptionPane.OK_OPTION) {
+        System.out.println("OK Button Clicked");
+      } else {
+        System.out.println("Cancel Button Clicked or Dialog Closed");
+      }*/
+    }
+
+  }
+
+
   @Override
   public void actionPerformed(ActionEvent arg0) {
-    System.out.println("Action Performed: " + arg0.getActionCommand());  // Add this line
-    // TODO Auto-generated method stub
     switch (arg0.getActionCommand()) {
       case "Size options":
         handleSizeOptionAction();
@@ -298,44 +314,34 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
         if (retvalue == JFileChooser.APPROVE_OPTION) {
           File f = fchooser.getSelectedFile();
           fileOpenDisplay.setText(f.getAbsolutePath());
+          srcPath = f.getAbsolutePath().toString();
         }
+        System.out.println("src"+srcPath);
       }
       break;
-      case "Split view":
-        System.out.println("Inside case block");
-        handleSplitViewAction();
-        break;
       case "Save file": {
         final JFileChooser fchooser = new JFileChooser(".");
         int retvalue = fchooser.showSaveDialog(SwingFeaturesFrame.this);
         if (retvalue == JFileChooser.APPROVE_OPTION) {
           File f = fchooser.getSelectedFile();
           fileSaveDisplay.setText(f.getAbsolutePath());
+          destPath = f.getAbsolutePath().toString();
         }
       }
       break;
-      case "Message":
-        JOptionPane.showMessageDialog(SwingFeaturesFrame.this, "This is a demo message", "Message",
-            JOptionPane.PLAIN_MESSAGE);
-        JOptionPane.showMessageDialog(SwingFeaturesFrame.this, "You are about to be deleted.",
-            "Last Chance", JOptionPane.WARNING_MESSAGE);
-        JOptionPane.showMessageDialog(SwingFeaturesFrame.this, "You have been deleted.", "Too late",
-            JOptionPane.ERROR_MESSAGE);
-        JOptionPane.showMessageDialog(SwingFeaturesFrame.this, "Please start again.",
-            "What to do next", JOptionPane.INFORMATION_MESSAGE);
-        break;
     }
-  }*/
+  }
+
 
   @Override
   public void valueChanged(ListSelectionEvent e) {
     // We don't know which list called this callback, because we're using it
     // for two lists.  In practice, you should use separate listeners
     JOptionPane.showMessageDialog(SwingFeaturesFrame.this,
-            "The source object is " + e.getSource(), "Source", JOptionPane.PLAIN_MESSAGE);
+        "The source object is " + e.getSource(), "Source", JOptionPane.PLAIN_MESSAGE);
     // Regardless, the event information tells us which index was selected
     JOptionPane.showMessageDialog(SwingFeaturesFrame.this,
-            "The changing index is " + e.getFirstIndex(), "Index", JOptionPane.PLAIN_MESSAGE);
+        "The changing index is " + e.getFirstIndex(), "Index", JOptionPane.PLAIN_MESSAGE);
   }
 
   @Override
