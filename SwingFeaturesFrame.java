@@ -11,26 +11,18 @@ import java.io.File;
 import java.util.Hashtable;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -45,11 +37,8 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
 
   private JComboBox<String> combobox = new JComboBox<String>();
   JTextField textField = new JTextField(10);
-
   private JPanel mainPanel;
   private JScrollPane mainScrollPane;
-  private JLabel comboboxDisplay;
-
   private JLabel fileOpenDisplay;
   private JLabel fileSaveDisplay;
   private JTextField numberTextField;
@@ -57,15 +46,15 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
   private String srcPath;
   private String destPath;
   private int manipulationValue;
-
   private int splitValue;
 
   private JButton okButton;
   private JButton cancelButton;
-  private int compressionValue;
   private int levelAdjustValueB;
   private int levelAdjustValueM;
   private int levelAdjustValueW;
+
+  private boolean saveClicked = false;
 
   private JTextField valueTextField;
 
@@ -195,6 +184,10 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
   private void handleSizeOptionAction() {
     String selectedOption = (String) combobox.getSelectedItem();
     splitViewCheckBox.setEnabled(false);
+    if (!saveClicked) {
+      JOptionPane.showMessageDialog(this, "Please click 'Save' before selecting another manipulation operation.", "Error", JOptionPane.ERROR_MESSAGE);
+      return;
+    }
     // Show/hide text field based on the selected option
     if (selectedOption.equals("Color-correct") || selectedOption.equals("Sepia")
         || selectedOption.equals("Levels-adjust")
@@ -224,6 +217,7 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
       numberTextField.setVisible(false);
       numberTextField.setText(""); // Clear the text field when unchecked
     }
+    saveClicked=false;
   }
 
   private void handleSplitViewAction(boolean currentState) {
@@ -298,8 +292,39 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
 
   }
 
-
   @Override
+  public void actionPerformed(ActionEvent arg0) {
+    if (arg0.getActionCommand().equals("Size options")) {
+      // Skip the initial call when the program starts
+      if (!combobox.getSelectedItem().equals("Red-component")) {
+        handleSizeOptionAction();
+      }
+    } else if (arg0.getActionCommand().equals("Open file")) {
+      final JFileChooser fchooser = new JFileChooser(".");
+      FileNameExtensionFilter filter = new FileNameExtensionFilter(
+          "JPG & GIF Images", "jpg", "gif");
+      fchooser.setFileFilter(filter);
+      int retvalue = fchooser.showOpenDialog(SwingFeaturesFrame.this);
+      if (retvalue == JFileChooser.APPROVE_OPTION) {
+        File f = fchooser.getSelectedFile();
+        fileOpenDisplay.setText(f.getAbsolutePath());
+        srcPath = f.getAbsolutePath().toString();
+      }
+      System.out.println("src" + srcPath);
+    } else if (arg0.getActionCommand().equals("Save file")) {
+      final JFileChooser fchooser = new JFileChooser(".");
+      int retvalue = fchooser.showSaveDialog(SwingFeaturesFrame.this);
+      if (retvalue == JFileChooser.APPROVE_OPTION) {
+        File f = fchooser.getSelectedFile();
+        fileSaveDisplay.setText(f.getAbsolutePath());
+        destPath = f.getAbsolutePath().toString();
+        saveClicked = true;
+      }
+    }
+    // ... (rest of the actionPerformed method)
+  }
+
+/*  @Override
   public void actionPerformed(ActionEvent arg0) {
     switch (arg0.getActionCommand()) {
       case "Size options":
@@ -326,11 +351,12 @@ public class SwingFeaturesFrame extends JFrame implements ActionListener, ItemLi
           File f = fchooser.getSelectedFile();
           fileSaveDisplay.setText(f.getAbsolutePath());
           destPath = f.getAbsolutePath().toString();
+          saveClicked = true;
         }
       }
       break;
     }
-  }
+  }*/
 
 
   @Override
